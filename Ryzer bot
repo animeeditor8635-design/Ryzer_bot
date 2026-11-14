@@ -1,0 +1,56 @@
+const { createClient } = require('bedrock-protocol')
+
+function startBot() {
+  console.log('Connecting to RyzerMC...')
+  
+  const bot = createClient({
+    host: 'ryzermc.mcsh.gg',
+    port: 19132,
+    username: 'Ryzer_KeepAlive',
+    offline: true, // Cracked = true
+    version: '1.21.50', // Auto works for any version
+    keepAlive: true
+  })
+
+  bot.on('join', () => {
+    console.log('✅ BOT JOINED! Your server will NOT close now!')
+    
+    // Anti-AFK - Move + Jump every 20 sec
+    setInterval(() => {
+      try {
+        bot.queue('player_auth_input', {
+          pitch: Math.random() * 20,
+          yaw: Math.random() * 360,
+          position: bot.entity?.position || { x: 0, y: 0, z: 0 },
+          move_vector: { x: 0, z: 1 },
+          head_yaw: Math.random() * 360,
+          input_data: { _value: 0n, is_sneaking: false, is_jumping: true },
+          input_mode: 'mouse',
+          play_mode: 'normal',
+          interaction_model: 'touch',
+          gaze: null,
+          tick: 0n,
+          delta: { x: 0, y: 0, z: 0 }
+        })
+        console.log('Anti-AFK move sent')
+      } catch (e) {}
+    }, 20000)
+  })
+
+  bot.on('disconnect', (packet) => {
+    console.log('❌ Kicked. Rejoining in 5 sec... Reason: ' + packet.message)
+    setTimeout(startBot, 5000)
+  })
+
+  bot.on('close', () => {
+    console.log('Connection closed. Rejoining in 5 sec...')
+    setTimeout(startBot, 5000)
+  })
+
+  bot.on('error', (err) => {
+    console.log('Error: ' + err.message)
+    setTimeout(startBot, 5000)
+  })
+}
+
+startBot()
